@@ -1,5 +1,10 @@
 #!/usr/bin/env ruby
 
+# Given a username, retrieves the user's following and followers and categorize them into:
+# - mutual followers
+# - only followers
+# - only following
+
 require 'octokit'
 require 'set'
 
@@ -14,6 +19,32 @@ def show_list list
   }
 end
 
+def report_ff username
+  client = Octokit::Client.new(
+    auto_paginate: true,
+    netrc: true
+  )
+
+  begin
+    following = Set.new(client.following(username).map(&:login))
+    followers = Set.new(client.followers(username).map(&:login))
+  rescue Octokit::NotFound
+    warn "User #{username} not found!"
+    exit 1
+  end
+
+  puts 'Mutual following:'
+  show_list following & followers
+  puts
+
+  puts 'Only following:'
+  show_list following - followers
+  puts
+
+  puts 'Only followers:'
+  show_list followers - following
+end
+
 if ARGV.size < 1
   puts <<-EOM
 Usage: #{File.basename $PROGRAM_NAME} username
@@ -21,31 +52,5 @@ Usage: #{File.basename $PROGRAM_NAME} username
   exit
 end
 
-username = ARGV.first
-
-Octokit.auto_paginate = true
-
-begin
-  following = Set.new(Octokit.following(username).map(&:login))
-  followers = Set.new(Octokit.followers(username).map(&:login))
-rescue Octokit::NotFound
-  warn "User #{username} not found!"
-  exit 1
-end
-
-mutual = following & followers
-only_following = following - followers
-only_followers = followers - following
-
-puts 'Mutual following:'
-show_list mutual
-puts
-
-puts 'Only following:'
-show_list only_following
-puts
-
-puts 'Only followers:'
-show_list only_followers
-
+report_ff ARGV.first
 __END__
