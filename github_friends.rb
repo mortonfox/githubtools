@@ -20,9 +20,12 @@ def show_list list
 end
 
 def report_ff username
+  # Check if netrc gem is installed.
+  got_netrc = Gem::Specification.find_all_by_name('netrc').any?
+
   client = Octokit::Client.new(
     auto_paginate: true,
-    netrc: true
+    netrc: got_netrc
   )
 
   begin
