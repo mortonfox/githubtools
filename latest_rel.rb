@@ -10,7 +10,7 @@ def report_latest client, repo
     return
   end
   latest = client.latest_release(repo)
-  puts "#{repo}: #{latest.name} #{latest.published_at}"
+  puts "#{repo}: #{latest.name} at #{latest.published_at.localtime.strftime '%Y-%m-%d %H:%M'}"
 rescue Octokit::NotFound
   warn "#{repo}: No releases"
 end
@@ -28,7 +28,7 @@ got_netrc = Gem::Specification.find_all_by_name('netrc').any?
 client = Octokit::Client.new(netrc: got_netrc)
 
 ARGV.each { |arg|
-  unless arg =~ %r(^[^/]+/[^/]+$)
+  unless arg =~ %r{^[^/]+/[^/]+$}
     warn "Invalid repo '#{arg}'. Must be in the format owner/repo"
     next
   end
