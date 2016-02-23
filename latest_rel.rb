@@ -1,26 +1,47 @@
 #!/usr/bin/env ruby
 
 require 'octokit'
+require 'optparse'
+require 'pp'
+require 'ostruct'
 
 def report_latest client, repo
-  # require 'pp'
-  # pp client.latest_release(repo)
   unless client.repository?(repo)
     warn "Repo #{repo} does not exist"
     return
   end
-  latest = client.latest_release(repo)
-  puts "#{repo}: #{latest.name} at #{latest.published_at.localtime.strftime '%Y-%m-%d %H:%M'}"
+  yield repo, client.latest_release(repo)
 rescue Octokit::NotFound
   warn "#{repo}: No releases"
 end
 
-if ARGV.size < 1
-  puts <<-EOM
-Usage: #{File.basename $PROGRAM_NAME} owner/repo [owner/repo ...]
-  EOM
-  exit
+def parse_opts
+  options = OpenStruct.new(debug: false)
+
+  opt_parser = OptionParser.new { |opts|
+    opts.banner = "Usage: #{File.basename $PROGRAM_NAME} [options] owner/repo [owner/repo ...]"
+
+    opts.on('-d', '--debug', 'Debug mode') {
+      options.debug = true
+    }
+
+    opts.on('-h', '--help', 'Prints this help') {
+      puts opts
+      exit
+    }
+  }
+
+  opt_parser.parse!
+
+  if ARGV.size < 1
+    puts opt_parser.help
+    exit
+  end
+
+  options
 end
+
+options = parse_opts
 
 # Check if netrc gem is installed.
 got_netrc = Gem::Specification.find_all_by_name('netrc').any?
@@ -32,7 +53,14 @@ ARGV.each { |arg|
     warn "Invalid repo '#{arg}'. Must be in the format owner/repo"
     next
   end
-  report_latest client, arg
+  report_latest(client, arg) { |repo, rel|
+    if options.debug
+      puts "#{repo}:"
+      pp rel
+    else
+      puts "#{repo}: #{rel.name} at #{rel.published_at.localtime.strftime '%Y-%m-%d %H:%M'}"
+    end
+  }
 }
 
 __END__
