@@ -21,6 +21,10 @@ def parse_opts
   opt_parser = OptionParser.new { |opts|
     opts.banner = "Usage: #{File.basename $PROGRAM_NAME} [options] owner/repo [owner/repo ...]"
 
+    opts.on('-l', '--long', 'Long format') {
+      options.long = true
+    }
+
     opts.on('-d', '--debug', 'Debug mode') {
       options.debug = true
     }
@@ -41,6 +45,22 @@ def parse_opts
   options
 end
 
+KB_SIZE = 1024.0
+MB_SIZE = KB_SIZE * 1024.0
+GB_SIZE = MB_SIZE * 1024.0
+
+def fmt_size size
+  if size >= GB_SIZE
+    format('%.2f GB', size / GB_SIZE)
+  elsif size >= MB_SIZE
+    format('%.2f MB', size / MB_SIZE)
+  elsif size >= KB_SIZE
+    format('%.2f KB', size / KB_SIZE)
+  else
+    size.to_s
+  end
+end
+
 options = parse_opts
 
 # Check if netrc gem is installed.
@@ -57,6 +77,17 @@ ARGV.each { |arg|
     if options.debug
       puts "#{repo}:"
       pp rel
+      puts
+    elsif options.long
+      puts "#{repo}: #{rel.name} at #{rel.published_at.localtime.strftime '%Y-%m-%d %H:%M'}"
+      rel.assets.each { |asset|
+        puts " * #{asset.name} (#{fmt_size asset.size}): #{asset.browser_download_url}"
+      }
+      puts <<-EOM
+ * tarball: #{rel.tarball_url}
+ * zipball: #{rel.zipball_url}
+
+      EOM
     else
       puts "#{repo}: #{rel.name} at #{rel.published_at.localtime.strftime '%Y-%m-%d %H:%M'}"
     end
