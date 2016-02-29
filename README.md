@@ -7,3 +7,13 @@ these are as follows:
   into 3 categories: mutual follows, only followers, and only following.
 * latest\_rel.rb: This script shows a bit of information about the latest
   releases from the specified repositories.
+
+## Usage
+
+### github\_friends
+
+Run the script with a username as the first argument. For example:
+
+    ruby github_friends.rb mortonfox
+
+### latest\_rel
