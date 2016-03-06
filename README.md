@@ -7,6 +7,9 @@ these are as follows:
   into 3 categories: mutual follows, only followers, and only following.
 * latest\_rel.rb: This script shows a bit of information about the latest
   releases from the specified repositories.
+* backup\_gists.rb: Downloads all of a user's gists, ready for backup.
+* backup\_repos.rb: Downloads all of a user's repositories. Produces a git
+  bundle and a zip file for each repository.
 
 ## Usage
 
