@@ -47,3 +47,10 @@ downloads. For example:
      * zipball: https://api.github.com/repos/brave/browser-android/zipball/v1.9.0
 
     $
+
+### backup\_gists
+
+Run this script with a username as the first argument. This will:
+
+* Create a folder named gists.
+* git clone each of the user's gists under that folder.
