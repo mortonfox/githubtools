@@ -54,3 +54,14 @@ Run this script with a username as the first argument. This will:
 
 * Create a folder named gists.
 * git clone each of the user's gists under that folder.
+
+### backup\_repos
+
+Run this script with a username as the first argument. This will:
+
+* Create a folder named repos.
+* git clone each of the user's repositories, excluding forks of other repositories.
+* Create a git bundle for each repository.
+* Create a zip file of each repository.
+* Delete the cloned repository.
+
