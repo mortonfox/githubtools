@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+# Given a username, downloads all of the user's gists.
+
 require 'octokit'
 require 'git'
 

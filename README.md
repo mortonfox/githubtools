@@ -50,14 +50,16 @@ downloads. For example:
 
 ### backup\_gists
 
-Run this script with a username as the first argument. This will:
+Run this script with a username as the first argument. The script will do the
+following:
 
 * Create a folder named gists.
 * git clone each of the user's gists under that folder.
 
 ### backup\_repos
 
-Run this script with a username as the first argument. This will:
+Run this script with a username as the first argument. The script will do the
+following:
 
 * Create a folder named repos.
 * git clone each of the user's repositories, excluding forks of other repositories.
