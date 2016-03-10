@@ -49,9 +49,10 @@ def backup_repos username
       got_warning = true
     end
 
-    result = system "zip -9qr \"#{subfolder}.zip\" \"#{subfolder}\""
+    # result = system "zip -9qr \"#{subfolder}.zip\" \"#{subfolder}\""
+    result = system "cd \"#{subfolder}\"; git archive --format zip --prefix \"#{subfolder}/\" -9 -o \"../#{subfolder}.zip\" HEAD"
     unless result
-      warn "zip failed for subfolder #{subfolder}: exit code #{$CHILD_STATUS}"
+      warn "git archive failed for subfolder #{subfolder}: exit code #{$CHILD_STATUS}"
       got_warning = true
     end
 
