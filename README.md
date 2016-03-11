@@ -64,6 +64,6 @@ following:
 * Create a folder named repos.
 * git clone each of the user's repositories, excluding forks of other repositories.
 * Create a git bundle for each repository.
-* Create a zip file of each repository.
-* Delete the cloned repository.
+* Use git archive to create a zip file of each repository.
+* Delete the cloned repositories.
 

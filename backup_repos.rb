@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
 
+# Given a username, downloads all the user's repositories.
+# Produces a git bundle and a zip file (using git archive) of each repository,
+# ready for backing up.
+
 require 'fileutils'
 require 'octokit'
 require 'git'
