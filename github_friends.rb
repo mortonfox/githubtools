@@ -48,7 +48,7 @@ def report_ff username
   show_list followers - following
 end
 
-if ARGV.size < 1
+if ARGV.empty?
   puts <<-EOM
 Usage: #{File.basename $PROGRAM_NAME} username
   EOM

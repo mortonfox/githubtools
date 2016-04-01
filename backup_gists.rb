@@ -40,7 +40,7 @@ def backup_gists username
   }
 end
 
-if ARGV.size < 1
+if ARGV.empty?
   puts <<-EOM
 Usage: #{File.basename $PROGRAM_NAME} username
   EOM

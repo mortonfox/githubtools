@@ -37,7 +37,7 @@ def parse_opts
 
   opt_parser.parse!
 
-  if ARGV.size < 1
+  if ARGV.empty?
     puts opt_parser.help
     exit
   end
