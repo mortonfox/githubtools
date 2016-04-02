@@ -7,6 +7,7 @@
 
 require 'octokit'
 require 'set'
+require 'optparse'
 
 def show_list list
   if list.empty?
@@ -19,7 +20,7 @@ def show_list list
   }
 end
 
-def report_ff username
+def report_ff username, options
   # Check if netrc gem is installed.
   got_netrc = Gem::Specification.find_all_by_name('netrc').any?
 
@@ -36,24 +37,63 @@ def report_ff username
     exit 1
   end
 
-  puts 'Mutual following:'
-  show_list following & followers
-  puts
+  if !options[:mutual_friends] && !options[:only_friends] && !options[:only_followers]
+    # If none of the 3 options are specified, show everything.
+    options[:mutual_friends] = options[:only_friends] = options[:only_followers] = true
+  end
 
-  puts 'Only following:'
-  show_list following - followers
-  puts
+  if options[:mutual_friends]
+    puts 'Mutual following:'
+    show_list following & followers
+    puts
+  end
 
-  puts 'Only followers:'
-  show_list followers - following
+  if options[:only_friends]
+    puts 'Only following:'
+    show_list following - followers
+    puts
+  end
+
+  if options[:only_followers]
+    puts 'Only followers:'
+    show_list followers - following
+    puts
+  end
 end
+
+options = {}
+
+optp = OptionParser.new
+
+optp.banner = "Usage: #{File.basename $PROGRAM_NAME} [options] username"
+
+optp.on('-h', '-?', '--help', 'Option help') {
+  puts optp
+  exit
+}
+
+optp.on('-m', '--mutual', 'Show mutual friends') {
+  options[:mutual_friends] = true
+}
+
+optp.on('-r', '--only-friends', 'Show only-friends') {
+  options[:only_friends] = true
+}
+
+optp.on('-o', '--only-followers', 'Show only-followers') {
+  options[:only_followers] = true
+}
+
+optp.separator '  If none of -m/-r/-o are specified, display all 3 categories.'
+
+optp.parse!
 
 if ARGV.empty?
-  puts <<-EOM
-Usage: #{File.basename $PROGRAM_NAME} username
-  EOM
-  exit
+  warn 'Error: username argument missing!'
+  warn optp
+  exit 1
 end
 
-report_ff ARGV.first
+report_ff ARGV.first, options
+
 __END__
