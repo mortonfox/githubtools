@@ -19,6 +19,17 @@ Run the script with a username as the first argument. For example:
 
     ruby github_friends.rb mortonfox
 
+You can control what this script outputs using the -m, -r, and -o options:
+
+    bash-4.3$ ruby github_friends.rb -h
+    Usage: github_friends.rb [options] username
+        -h, -?, --help                   Option help
+        -m, --mutual                     Show mutual friends
+        -r, --only-friends               Show only-friends
+        -o, --only-followers             Show only-followers
+    If none of -m/-r/-o are specified, display all 3 categories.
+    bash-4.3$
+
 ### latest\_rel
 
 Run the script with one or more Github repos as the arguments. This will give
