@@ -11,6 +11,17 @@ these are as follows:
 * backup\_repos.rb: Downloads all of a user's repositories. Produces a git
   bundle and a zip file for each repository.
 
+## Authentication
+
+Although githubtools will work fine without Github authentication, it won't be
+able to access private gists and repositories and it will be rate-limited by
+the Github API.
+
+githubtools uses the [netrc gem](https://github.com/heroku/netrc) to retrieve
+login credentials from a
+[.netrc file](http://www.gnu.org/software/inetutils/manual/html\_node/The-\_002enetrc-file.html)
+in your home directory.
+
 ## Usage
 
 ### github\_friends
