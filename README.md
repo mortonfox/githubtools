@@ -22,6 +22,28 @@ login credentials from a
 [.netrc file](http://www.gnu.org/software/inetutils/manual/html\_node/The-\_002enetrc-file.html)
 in your home directory.
 
+Although adding your Github password to the .netrc file would work, I suggest
+using a personal access token instead because it is easier to revoke if there
+is a security breach.
+
+To generate an access token:
+
+* Go to <https://github.com/settings/tokens> and click on "Generate new token".
+* Fill in an appropriate token description and select the "gist" scope. (That
+  is for the backup\_gists script.)
+* Click on "Generate token".
+* The next screen will show the access token. Copy it.
+
+Add the following to the .netrc file in your home directory:
+
+    machine api.github.com
+        login githublogin
+        password accesstoken
+
+where ```githublogin``` is your Github user name and ```accesstoken``` is the
+access token that you copied from the last step above. The githubtools scripts
+should now be able to use your Github account for API access.
+
 ## Usage
 
 ### github\_friends
