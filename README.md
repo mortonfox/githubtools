@@ -11,6 +11,15 @@ these are as follows:
 * backup\_repos.rb: Downloads all of a user's repositories. Produces a git
   bundle and a zip file for each repository.
 
+## Installation
+
+The scripts use the octokit and git Ruby gems. In addition, the netrc gem is
+recommended too, as explained in the Authentication section below.
+
+Thus, run the following:
+
+    gem install octokit git netrc
+
 ## Authentication
 
 Although githubtools will work fine without Github authentication, it won't be
