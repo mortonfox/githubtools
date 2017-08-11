@@ -31,9 +31,11 @@ login credentials from a
 [.netrc file](http://www.gnu.org/software/inetutils/manual/html\_node/The-\_002enetrc-file.html)
 in your home directory.
 
-Although adding your Github password to the .netrc file would work, I suggest
-using a personal access token instead because it is easier to revoke if there
-is a security breach.
+Although adding your Github password to the .netrc file would work if you do
+not have two-factor authentication enabled, I suggest using a personal access
+token instead because it is easy to revoke if there is a security breach. If
+you do have two-factor authentication enabled, then you need a personal access
+token for githubtools.
 
 To generate an access token:
 
