@@ -10,6 +10,8 @@ these are as follows:
 * backup\_gists.rb: Downloads all of a user's gists, ready for backup.
 * backup\_repos.rb: Downloads all of a user's repositories. Produces a git
   bundle and a zip file for each repository.
+* search\_and\_del.rb: Search for fork repos with names matching the given
+  string and offer to delete them.
 
 ## Installation
 
@@ -40,8 +42,10 @@ token for githubtools.
 To generate an access token:
 
 * Go to <https://github.com/settings/tokens> and click on "Generate new token".
-* Fill in an appropriate token description and select the "gist" scope. (That
-  is for the backup\_gists script.)
+* Fill in an appropriate token description.
+* Select the "gist" scope. (That is for the backup\_gists script.)
+* Select the "delete\_repo" scope if you need to use the search\_and\_del
+  script.
 * Click on "Generate token".
 * The next screen will show the access token. Copy it.
 
@@ -122,3 +126,16 @@ following:
 * Use git archive to create a zip file of each repository.
 * Delete the cloned repositories.
 
+### search\_and\_del
+
+Use this script to clean up unnecessary fork repos. Usually, it's okay to
+delete a fork after the pull request has been merged. You may also delete the
+fork before the pull request has been merged but you'll need [a workaround to
+resurrect the pull
+request](https://github.com/isaacs/github/issues/168#issuecomment-374201226)
+if you wish to continue working on it. So use this script *at your own risk*.
+
+Run this script with a search string as the first argument. The script will
+look for fork repos matching the search string and offer to delete them. If
+there are fork repos that you with to exclude from this search, add "#keep" to
+their descriptions.
