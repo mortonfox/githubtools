@@ -63,39 +63,46 @@ def report_ff username, options
   end
 end
 
-options = {}
+def parse_cmdline
+  options = {}
 
-optp = OptionParser.new
+  optp = OptionParser.new
 
-optp.banner = "Usage: #{File.basename $PROGRAM_NAME} [options] username"
+  optp.banner = "Usage: #{File.basename $PROGRAM_NAME} [options] username"
 
-optp.on('-h', '-?', '--help', 'Option help') {
-  puts optp
-  exit
-}
+  optp.on('-h', '-?', '--help', 'Option help') {
+    puts optp
+    exit
+  }
 
-optp.on('-m', '--mutual', 'Show mutual friends') {
-  options[:mutual_friends] = true
-}
+  optp.on('-m', '--mutual', 'Show mutual friends') {
+    options[:mutual_friends] = true
+  }
 
-optp.on('-r', '--only-friends', 'Show only-friends') {
-  options[:only_friends] = true
-}
+  optp.on('-r', '--only-friends', 'Show only-friends') {
+    options[:only_friends] = true
+  }
 
-optp.on('-o', '--only-followers', 'Show only-followers') {
-  options[:only_followers] = true
-}
+  optp.on('-o', '--only-followers', 'Show only-followers') {
+    options[:only_followers] = true
+  }
 
-optp.separator '  If none of -m/-r/-o are specified, display all 3 categories.'
+  optp.separator '  If none of -m/-r/-o are specified, display all 3 categories.'
 
-optp.parse!
+  optp.parse!
 
-if ARGV.empty?
-  warn 'Error: username argument missing!'
-  warn optp
-  exit 1
+  if ARGV.empty?
+    warn 'Error: username argument missing!'
+    warn optp
+    exit 1
+  end
+
+  options[:username] = ARGV.first
+
+  options
 end
 
-report_ff ARGV.first, options
+options = parse_cmdline
+report_ff(options[:username], options)
 
 __END__
