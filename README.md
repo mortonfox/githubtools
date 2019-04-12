@@ -117,8 +117,13 @@ following:
 
 ### backup\_repos
 
-Run this script with a username as the first argument. The script will do the
-following:
+Run this script with no argument to backup the authenticated user's repos.
+This mode of operation will back up both public and private repos.
+
+Run this script with a username as the first argument to backup that user's
+public repos.
+
+The script will do the following:
 
 * Create a folder named repos.
 * git clone each of the user's repositories, excluding forks of other repositories.

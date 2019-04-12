@@ -7,6 +7,7 @@
 require 'fileutils'
 require 'octokit'
 require 'git'
+require 'optparse'
 
 REPOS_FOLDER = './repos'
 
@@ -64,12 +65,24 @@ def backup_repos username
   }
 end
 
-if ARGV.empty?
-  puts <<-EOM
-Usage: #{File.basename $PROGRAM_NAME} username
-  EOM
-  exit
+def parse_cmdline
+  optp = OptionParser.new
+
+  optp.banner = "Usage: #{File.basename $PROGRAM_NAME} [options] [username]"
+
+  optp.on('-h', '-?', '--help', 'Show this help') {
+    puts optp
+    exit
+  }
+
+  optp.separator("\nIf username is specified, back up that user's public repos. If username is not specified, back up the authenticated user's public and private repos.")
+
+  optp.parse!
+
+  ARGV.first
 end
 
-backup_repos ARGV.first
+username = parse_cmdline
+backup_repos(username)
+
 __END__
