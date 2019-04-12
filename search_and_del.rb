@@ -7,11 +7,13 @@ RESULTS_SLICE = 50
 
 def search_repos client, search_str
   repos = client.repos(nil)
-  repos.select { |repo|
-    # Consider only forks.
-    # Ignore repos with #keep in the description.
-    repo[:fork] && !repo[:description].downcase.include?('#keep') && repo[:name].downcase.include?(search_str.downcase)
-  }.map { |repo| repo[:full_name] }
+  repos
+    .select { |repo|
+      # Consider only forks.
+      # Ignore repos with #keep in the description.
+      repo[:fork] && !repo[:description].downcase.include?('#keep') && repo[:name].downcase.include?(search_str.downcase)
+    }
+    .map { |repo| repo[:full_name] }
 end
 
 def delete_repos client, reponames

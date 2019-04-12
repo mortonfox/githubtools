@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+# frozen_string_literal: true
+
 require 'octokit'
 require 'optparse'
 require 'pp'
@@ -69,7 +71,7 @@ got_netrc = Gem::Specification.find_all_by_name('netrc').any?
 client = Octokit::Client.new(netrc: got_netrc)
 
 ARGV.each { |arg|
-  unless arg =~ %r{^[^/]+/[^/]+$}
+  unless arg.match?(%r{^[^/]+/[^/]+$})
     warn "Invalid repo '#{arg}'. Must be in the format owner/repo"
     next
   end
@@ -83,11 +85,11 @@ ARGV.each { |arg|
       rel.assets.each { |asset|
         puts " * #{asset.name} (#{fmt_size asset.size}): #{asset.browser_download_url}"
       }
-      puts <<-EOM
+      puts <<-DLOADURLS
  * tarball: #{rel.tarball_url}
  * zipball: #{rel.zipball_url}
 
-      EOM
+      DLOADURLS
     else
       puts "#{repo}: #{rel.name} at #{rel.published_at.localtime.strftime '%Y-%m-%d %H:%M'}"
     end

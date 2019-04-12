@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+# frozen_string_literal: true
+
 # Given a username, downloads all of the user's gists.
 
 require 'octokit'
@@ -41,9 +43,9 @@ def backup_gists username
 end
 
 if ARGV.empty?
-  puts <<-EOM
+  puts <<-USAGE
 Usage: #{File.basename $PROGRAM_NAME} username
-  EOM
+  USAGE
   exit
 end
 

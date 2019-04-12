@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+# frozen_string_literal: true
+
 # Given a username, downloads all the user's repositories.
 # Produces a git bundle and a zip file (using git archive) of each repository,
 # ready for backing up.

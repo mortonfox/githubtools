@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+# frozen_string_literal: true
+
 # Given a username, retrieves the user's following and followers and categorize them into:
 # - mutual followers
 # - only followers
