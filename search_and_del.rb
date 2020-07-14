@@ -11,7 +11,7 @@ def search_repos client, search_str
     .select { |repo|
       # Consider only forks.
       # Ignore repos with #keep in the description.
-      repo[:fork] && !repo[:description].downcase.include?('#keep') && repo[:name].downcase.include?(search_str.downcase)
+      repo[:fork] && !repo[:description].to_s.downcase.include?('#keep') && repo[:name].downcase.include?(search_str.downcase)
     }
     .map { |repo| repo[:full_name] }
 end
