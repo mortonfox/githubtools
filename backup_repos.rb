@@ -38,33 +38,50 @@ def backup_repos username
   repos.each_with_index { |repo, repo_indx|
     puts "#{repo_indx + 1}: Cloning repo #{repo[:full_name]}..."
 
-    # Find a subfolder name that does not already exist.
-    subfolder = repo[:name]
-    if Dir.exist? subfolder
-      i = 1
-      i += 1 while Dir.exist? "#{subfolder}-#{i}"
-      subfolder = "#{subfolder}-#{i}"
+    clone_and_bundle(repo[:clone_url], find_new_subfolder(repo[:name]))
+
+    next unless repo[:has_wiki]
+
+    wiki_name = repo[:name] + '.wiki'
+    wiki_clone_url = repo[:clone_url].gsub(/\.git$/, '.wiki\&')
+
+    begin
+      clone_and_bundle(wiki_clone_url, find_new_subfolder(wiki_name))
+    rescue StandardError => e
+      warn "Error backing up repo wiki #{wiki_name}: #{e}"
     end
-
-    got_warning = false
-
-    Git.clone repo[:clone_url], subfolder
-
-    result = system "cd \"#{subfolder}\"; git bundle create \"../#{subfolder}.bundle\" --all"
-    unless result
-      warn "git bundle failed for subfolder #{subfolder}: exit code #{$CHILD_STATUS}"
-      got_warning = true
-    end
-
-    # result = system "zip -9qr \"#{subfolder}.zip\" \"#{subfolder}\""
-    result = system "cd \"#{subfolder}\"; git archive --format zip --prefix \"#{subfolder}/\" -9 -o \"../#{subfolder}.zip\" HEAD"
-    unless result
-      warn "git archive failed for subfolder #{subfolder}: exit code #{$CHILD_STATUS}"
-      got_warning = true
-    end
-
-    FileUtils.rm_rf subfolder unless got_warning
   }
+end
+
+# Find a subfolder name that does not already exist.
+def find_new_subfolder subfolder
+  if Dir.exist?(subfolder)
+    i = 1
+    i += 1 while Dir.exist? "#{subfolder}-#{i}"
+    subfolder = "#{subfolder}-#{i}"
+  end
+  subfolder
+end
+
+def clone_and_bundle clone_url, subfolder
+  got_warning = false
+
+  Git.clone clone_url, subfolder
+
+  result = system "cd \"#{subfolder}\"; git bundle create \"../#{subfolder}.bundle\" --all"
+  unless result
+    warn "git bundle failed for subfolder #{subfolder}: exit code #{$CHILD_STATUS}"
+    got_warning = true
+  end
+
+  # result = system "zip -9qr \"#{subfolder}.zip\" \"#{subfolder}\""
+  result = system "cd \"#{subfolder}\"; git archive --format zip --prefix \"#{subfolder}/\" -9 -o \"../#{subfolder}.zip\" HEAD"
+  unless result
+    warn "git archive failed for subfolder #{subfolder}: exit code #{$CHILD_STATUS}"
+    got_warning = true
+  end
+
+  FileUtils.rm_rf subfolder unless got_warning
 end
 
 def parse_cmdline
