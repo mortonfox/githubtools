@@ -1,5 +1,22 @@
 # githubtools
 
+<!-- vim-markdown-toc GFM -->
+
+* [Introduction](#introduction)
+* [Installation](#installation)
+    * [Set up OAuth app](#set-up-oauth-app)
+    * [Set up config file](#set-up-config-file)
+* [Usage](#usage)
+    * [github\_friends](#github_friends)
+    * [latest\_rel](#latest_rel)
+    * [backup\_gists](#backup_gists)
+    * [backup\_repos](#backup_repos)
+    * [search\_and\_del](#search_and_del)
+
+<!-- vim-markdown-toc -->
+
+## Introduction
+
 githubtools is a set of scripts to do simple things with Github. Currently, these are as follows:
 
 * github\_friends.rb: This script sorts your Github followers and following into 3 categories: mutual follows, only followers, and only following.
@@ -10,40 +27,45 @@ githubtools is a set of scripts to do simple things with Github. Currently, thes
 
 ## Installation
 
-The scripts use the octokit and git Ruby gems. In addition, the netrc gem is recommended too, as explained in the Authentication section below.
-
-Thus, run the following:
+Get the repo:
 
 ```sh
-gem install octokit git netrc
+git clone git@github.com:mortonfox/githubtools.git
+cd githubtools
 ```
 
-## Authentication
+Install gems:
 
-Although githubtools will work fine without Github authentication, it won't be able to access private gists and repositories and it will be rate-limited by the Github API.
-
-githubtools uses the [netrc gem](https://github.com/heroku/netrc) to retrieve login credentials from a [.netrc file](http://www.gnu.org/software/inetutils/manual/html\_node/The-\_002enetrc-file.html) in your home directory.
-
-Although adding your Github password to the .netrc file would work if you do not have two-factor authentication enabled, I suggest using a personal access token instead because it is easy to revoke if there is a security breach. If you do have two-factor authentication enabled, then you need a personal access token for githubtools.
-
-To generate an access token:
-
-* Go to <https://github.com/settings/tokens> and click on "Generate new token".
-* Fill in an appropriate token description.
-* Select the "gist" scope. (That is for the backup\_gists script.)
-* Select the "delete\_repo" scope if you need to use the search\_and\_del script.
-* Click on "Generate token".
-* The next screen will show the access token. Copy it.
-
-Add the following to the .netrc file in your home directory:
-
-```
-machine api.github.com
-    login githublogin
-    password accesstoken
+```sh
+bundle install
 ```
 
-where ``githublogin`` is your Github user name and ``accesstoken`` is the access token that you copied from the last step above. The githubtools scripts should now be able to use your Github account for API access.
+### Set up OAuth app
+
+Go to <https://github.com/settings/developers> and click on "New OAuth App".
+
+Enter the following:
+
+* Application name: githubtools
+* Homepage URL: http://github.com/mortonfox/githubtools
+* Authorization callback URL: http://localhost:3501/callback
+
+Click on "Generate a new client secret".
+
+Save both the Client ID and Client Secret for later.
+
+### Set up config file
+
+Create a new file ``~/.githubtools.conf`` with the following content:
+
+```
+port = 3501
+token_file = "~/.githubtools.token"
+client_id = CLIENT_ID
+client_secret = CLIENT_SECRET
+```
+
+Where CLIENT_ID and CLIENT_SECRET are the Client ID and Client Secret you saved earlier.
 
 ## Usage
 
@@ -52,20 +74,21 @@ where ``githublogin`` is your Github user name and ``accesstoken`` is the access
 Run the script with a username as the first argument. For example:
 
 ```sh
-ruby github_friends.rb mortonfox
+bundle exec ./github_friends.rb mortonfox
 ```
 
 You can control what this script outputs using the -m, -r, and -o options:
 
 ```console
-$ ruby github_friends.rb -h
+$ bundle exec ./github_friends.rb -h
 Usage: github_friends.rb [options] username
     -h, -?, --help                   Option help
     -m, --mutual                     Show mutual friends
     -r, --only-friends               Show only-friends
     -o, --only-followers             Show only-followers
-If none of -m/-r/-o are specified, display all 3 categories.
-$
+        --auth                       Ignore saved access token and force reauthentication
+        --config-file=FNAME          Config file name. Default is /home/pcheah/.githubtools.conf
+  If none of -m/-r/-o are specified, display all 3 categories.
 ```
 
 ### latest\_rel
@@ -73,16 +96,15 @@ $
 Run the script with one or more Github repos as the arguments. This will give you a one-line-per-repo summary of the latest release from each repo. For example:
 
 ```console
-$ ruby latest_rel.rb brave/browser-laptop brave/browser-android
+$ bundle exec ./latest_rel.rb brave/browser-laptop brave/browser-android
 brave/browser-laptop: v0.7.16 Dev Channel at 2016-02-24 16:10
 brave/browser-android: v1.9.0 at 2016-02-24 19:53
-$
 ```
 
 If you add the ``-l`` switch, the script adds information on available downloads. For example:
 
 ```console
-$ ruby latest_rel.rb -l brave/browser-laptop brave/browser-android
+$ bundle exec ./latest_rel.rb -l brave/browser-laptop brave/browser-android
 brave/browser-laptop: v0.7.16 Dev Channel at 2016-02-24 16:10
     * Brave-Linux-x64.tar.bz2 (61.19 MB): https://github.com/brave/browser-laptop/releases/download/v0.7.16dev/Brave-Linux-x64.tar.bz2
     * Brave.dmg (79.21 MB): https://github.com/brave/browser-laptop/releases/download/v0.7.16dev/Brave.dmg
@@ -95,7 +117,16 @@ brave/browser-android: v1.9.0 at 2016-02-24 19:53
     * tarball: https://api.github.com/repos/brave/browser-android/tarball/v1.9.0
     * zipball: https://api.github.com/repos/brave/browser-android/zipball/v1.9.0
 
-$
+```
+
+For usage info:
+
+```console
+$ bundle exec ./latest_rel.rb -h
+Usage: latest_rel.rb [options] owner/repo [owner/repo ...]
+    -h, -?, --help                   Option help
+    -l, --long                       Long format
+    -d, --debug                      Debug mode
 ```
 
 ### backup\_gists

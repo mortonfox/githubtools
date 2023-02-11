@@ -2,10 +2,52 @@
 
 # frozen_string_literal: true
 
+# Shows info about latest releases from the specified repos.
+
+require 'finer_struct'
 require 'octokit'
 require 'optparse'
-require 'pp'
-require 'ostruct'
+require_relative 'lib/config'
+require_relative 'lib/github_auth'
+
+DEFAULT_CONFIG_FILE = File.expand_path('~/.githubtools.conf')
+
+def parse_cmdline
+  options = FinerStruct::Mutable.new(
+    config_file: DEFAULT_CONFIG_FILE,
+    force_auth: false,
+    debug: false,
+    long: false
+  )
+
+  opts = OptionParser.new
+
+  opts.banner = "Usage: #{File.basename $PROGRAM_NAME} [options] owner/repo [owner/repo ...]"
+
+  opts.on('-h', '-?', '--help', 'Option help') {
+    puts opts
+    exit
+  }
+
+  opts.on('-l', '--long', 'Long format') {
+    options.long = true
+  }
+
+  opts.on('-d', '--debug', 'Debug mode') {
+    options.debug = true
+  }
+
+  opts.parse!
+
+  if ARGV.empty?
+    puts opt_parser.help
+    exit
+  end
+
+  options
+
+  # List of repos will be in ARGV
+end
 
 def report_latest client, repo
   unless client.repository?(repo)
@@ -17,41 +59,11 @@ rescue Octokit::NotFound
   warn "#{repo}: No releases"
 end
 
-def parse_opts
-  options = OpenStruct.new(debug: false)
-
-  opt_parser = OptionParser.new { |opts|
-    opts.banner = "Usage: #{File.basename $PROGRAM_NAME} [options] owner/repo [owner/repo ...]"
-
-    opts.on('-l', '--long', 'Long format') {
-      options.long = true
-    }
-
-    opts.on('-d', '--debug', 'Debug mode') {
-      options.debug = true
-    }
-
-    opts.on('-h', '--help', 'Prints this help') {
-      puts opts
-      exit
-    }
-  }
-
-  opt_parser.parse!
-
-  if ARGV.empty?
-    puts opt_parser.help
-    exit
-  end
-
-  options
-end
-
 KB_SIZE = 1024.0
 MB_SIZE = KB_SIZE * 1024.0
 GB_SIZE = MB_SIZE * 1024.0
 
-def fmt_size size
+def fmt_size(size)
   if size >= GB_SIZE
     format('%.2f GB', size / GB_SIZE)
   elsif size >= MB_SIZE
@@ -63,27 +75,31 @@ def fmt_size size
   end
 end
 
-options = parse_opts
+options = parse_cmdline
 
-# Check if netrc gem is installed.
-got_netrc = Gem::Specification.find_all_by_name('netrc').any?
+config = Config.new
+config.load_config(options.config_file)
 
-client = Octokit::Client.new(netrc: got_netrc)
+auth = GithubAuth.new(config: config, force_auth: options.force_auth)
+access_token = auth.access_token
+
+client = Octokit::Client.new(access_token: access_token)
 
 ARGV.each { |arg|
   unless arg.match?(%r{^[^/]+/[^/]+$})
     warn "Invalid repo '#{arg}'. Must be in the format owner/repo"
     next
   end
+
   report_latest(client, arg) { |repo, rel|
     if options.debug
       puts "#{repo}:"
       pp rel
       puts
     elsif options.long
-      puts "#{repo}: #{rel.name} at #{rel.published_at.localtime.strftime '%Y-%m-%d %H:%M'}"
+      puts "#{repo}: #{rel.name} at #{rel.published_at.localtime.strftime('%Y-%m-%d %H:%M')}"
       rel.assets.each { |asset|
-        puts " * #{asset.name} (#{fmt_size asset.size}): #{asset.browser_download_url}"
+        puts " * #{asset.name} (#{fmt_size(asset.size)}): #{asset.browser_download_url}"
       }
       puts <<-DLOADURLS
  * tarball: #{rel.tarball_url}
@@ -91,7 +107,7 @@ ARGV.each { |arg|
 
       DLOADURLS
     else
-      puts "#{repo}: #{rel.name} at #{rel.published_at.localtime.strftime '%Y-%m-%d %H:%M'}"
+      puts "#{repo}: #{rel.name} at #{rel.published_at.localtime.strftime('%Y-%m-%d %H:%M')}"
     end
   }
 }
