@@ -7,22 +7,52 @@
 # ready for backing up.
 
 require 'fileutils'
-require 'octokit'
+require 'finer_struct'
 require 'git'
+require 'octokit'
 require 'optparse'
+require_relative 'lib/config'
+require_relative 'lib/github_auth'
 
 REPOS_FOLDER = './repos'
 
-def backup_repos username
-  # Check if netrc gem is installed.
-  got_netrc = Gem::Specification.find_all_by_name('netrc').any?
+DEFAULT_CONFIG_FILE = File.expand_path('~/.githubtools.conf')
 
-  client = Octokit::Client.new(
-    auto_paginate: true,
-    netrc: got_netrc
+def parse_cmdline
+  options = FinerStruct::Mutable.new(
+    config_file: DEFAULT_CONFIG_FILE,
+    force_auth: false,
+    username: nil
   )
 
-  repos = client.repos username
+  opts = OptionParser.new
+
+  opts.banner = "Usage: #{File.basename($PROGRAM_NAME)} [options] [username]"
+
+  opts.on('-h', '-?', '--help', 'Option help') {
+    puts opts
+    exit
+  }
+
+  opts.on('--auth', 'Ignore saved access token and force reauthentication') {
+    options.force_auth = true
+  }
+
+  opts.on('--config-file=FNAME', "Config file name. Default is #{DEFAULT_CONFIG_FILE}") { |fname|
+    options.config_file = fname
+  }
+
+  opts.separator("\nIf username is specified, back up that user's public repos. If username is not specified, back up the authenticated user's public and private repos.")
+
+  opts.parse!
+
+  options.username = ARGV.shift
+
+  options
+end
+
+def backup_repos(client, username)
+  repos = client.repos(username)
 
   # Backup only our own repos, not forks.
   repos.reject! { |repo| repo[:fork] }
@@ -38,12 +68,14 @@ def backup_repos username
   repos.each_with_index { |repo, repo_indx|
     puts "#{repo_indx + 1}: Cloning repo #{repo[:full_name]}..."
 
-    clone_and_bundle(repo[:clone_url], find_new_subfolder(repo[:name]))
+    git_url = repo[:ssh_url]
+
+    clone_and_bundle(git_url, find_new_subfolder(repo[:name]))
 
     next unless repo[:has_wiki]
 
     wiki_name = repo[:name] + '.wiki'
-    wiki_clone_url = repo[:clone_url].gsub(/\.git$/, '.wiki\&')
+    wiki_clone_url = git_url.gsub(/\.git$/, '.wiki\&')
 
     begin
       clone_and_bundle(wiki_clone_url, find_new_subfolder(wiki_name))
@@ -84,24 +116,16 @@ def clone_and_bundle clone_url, subfolder
   FileUtils.rm_rf subfolder unless got_warning
 end
 
-def parse_cmdline
-  optp = OptionParser.new
+options = parse_cmdline
 
-  optp.banner = "Usage: #{File.basename $PROGRAM_NAME} [options] [username]"
+config = Config.new
+config.load_config(options.config_file)
 
-  optp.on('-h', '-?', '--help', 'Show this help') {
-    puts optp
-    exit
-  }
+auth = GithubAuth.new(config: config, force_auth: options.force_auth)
+access_token = auth.access_token
 
-  optp.separator("\nIf username is specified, back up that user's public repos. If username is not specified, back up the authenticated user's public and private repos.")
+client = Octokit::Client.new(auto_paginate: true, access_token: access_token)
 
-  optp.parse!
-
-  ARGV.first
-end
-
-username = parse_cmdline
-backup_repos(username)
+backup_repos(client, options.username)
 
 __END__
