@@ -4,20 +4,54 @@
 
 # Given a username, downloads all of the user's gists.
 
-require 'octokit'
+require 'finer_struct'
 require 'git'
+require 'octokit'
+require 'optparse'
+require_relative 'lib/config'
+require_relative 'lib/github_auth'
 
 GISTS_FOLDER = './gists'
+DEFAULT_CONFIG_FILE = File.expand_path('~/.githubtools.conf')
 
-def backup_gists username
-  # Check if netrc gem is installed.
-  got_netrc = Gem::Specification.find_all_by_name('netrc').any?
-
-  client = Octokit::Client.new(
-    auto_paginate: true,
-    netrc: got_netrc
+def parse_cmdline
+  options = FinerStruct::Mutable.new(
+    config_file: DEFAULT_CONFIG_FILE,
+    force_auth: false,
+    username: nil
   )
 
+  opts = OptionParser.new
+
+  opts.banner = "Usage: #{File.basename($PROGRAM_NAME)} [options] username"
+
+  opts.on('-h', '-?', '--help', 'Option help') {
+    puts opts
+    exit
+  }
+
+  opts.on('--auth', 'Ignore saved access token and force reauthentication') {
+    options.force_auth = true
+  }
+
+  opts.on('--config-file=FNAME', "Config file name. Default is #{DEFAULT_CONFIG_FILE}") { |fname|
+    options.config_file = fname
+  }
+
+  opts.parse!
+
+  if ARGV.empty?
+    warn 'Error: username argument missing!'
+    warn opts
+    exit 1
+  end
+
+  options.username = ARGV.shift
+
+  options
+end
+
+def backup_gists(client, username)
   gists = client.gists username
   if gists.empty?
     puts 'No gists to download.'
@@ -42,12 +76,16 @@ def backup_gists username
   }
 end
 
-if ARGV.empty?
-  puts <<-USAGE
-Usage: #{File.basename $PROGRAM_NAME} username
-  USAGE
-  exit
-end
+options = parse_cmdline
 
-backup_gists ARGV.first
+config = Config.new
+config.load_config(options.config_file)
+
+auth = GithubAuth.new(config: config, force_auth: options.force_auth)
+access_token = auth.access_token
+
+client = Octokit::Client.new(auto_paginate: true, access_token: access_token)
+
+backup_gists(client, options.username)
+
 __END__
