@@ -2,6 +2,8 @@
 
 source 'https://rubygems.org'
 
+gem 'faraday-retry'
+gem 'finer_struct'
 gem 'git'
 gem 'hocon'
 gem 'json'

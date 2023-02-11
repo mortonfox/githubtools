@@ -7,11 +7,75 @@
 # - only followers
 # - only following
 
+require 'finer_struct'
 require 'octokit'
-require 'set'
 require 'optparse'
+require_relative 'lib/config'
+require_relative 'lib/github_auth'
 
-def show_list list
+DEFAULT_CONFIG_FILE = File.expand_path('~/.githubtools.conf')
+
+def parse_cmdline
+  options = FinerStruct::Mutable.new(
+    config_file: DEFAULT_CONFIG_FILE,
+    force_auth: false,
+    mutual_friends: false,
+    only_friends: false,
+    only_followers: false,
+    username: nil
+  )
+
+  opts = OptionParser.new
+
+  opts.banner = "Usage: #{File.basename($PROGRAM_NAME)} [options] username"
+
+  opts.on('-h', '-?', '--help', 'Option help') {
+    puts opts
+    exit
+  }
+
+  opts.on('-m', '--mutual', 'Show mutual friends') {
+    options.mutual_friends = true
+  }
+
+  opts.on('-r', '--only-friends', 'Show only-friends') {
+    options.only_friends = true
+  }
+
+  opts.on('-o', '--only-followers', 'Show only-followers') {
+    options.only_followers = true
+  }
+
+  opts.on('--auth', 'Ignore saved access token and force reauthentication') {
+    options.force_auth = true
+  }
+
+  opts.on('--config-file=FNAME', "Config file name. Default is #{DEFAULT_CONFIG_FILE}") { |fname|
+    options.config_file = fname
+  }
+
+
+  opts.separator '  If none of -m/-r/-o are specified, display all 3 categories.'
+
+  opts.parse!
+
+  if ARGV.empty?
+    warn 'Error: username argument missing!'
+    warn opts
+    exit 1
+  end
+
+  options.username = ARGV.first
+
+  if !options.mutual_friends && !options.only_friends && !options.only_followers
+    # If none of the 3 options are specified, show everything.
+    options.mutual_friends = options.only_friends = options.only_followers = true
+  end
+
+  options
+end
+
+def show_list(list)
   if list.empty?
     puts 'n/a'
     return
@@ -22,14 +86,8 @@ def show_list list
   }
 end
 
-def report_ff username, options
-  # Check if netrc gem is installed.
-  got_netrc = Gem::Specification.find_all_by_name('netrc').any?
-
-  client = Octokit::Client.new(
-    auto_paginate: true,
-    netrc: got_netrc
-  )
+def report_ff(client, options)
+  username = options.username
 
   begin
     following = Set.new(client.following(username).map(&:login))
@@ -39,70 +97,35 @@ def report_ff username, options
     exit 1
   end
 
-  if !options[:mutual_friends] && !options[:only_friends] && !options[:only_followers]
-    # If none of the 3 options are specified, show everything.
-    options[:mutual_friends] = options[:only_friends] = options[:only_followers] = true
-  end
-
-  if options[:mutual_friends]
+  if options.mutual_friends
     puts 'Mutual following:'
     show_list following & followers
     puts
   end
 
-  if options[:only_friends]
+  if options.only_friends
     puts 'Only following:'
     show_list following - followers
     puts
   end
 
-  if options[:only_followers]
+  if options.only_followers
     puts 'Only followers:'
     show_list followers - following
     puts
   end
 end
 
-def parse_cmdline
-  options = {}
-
-  optp = OptionParser.new
-
-  optp.banner = "Usage: #{File.basename $PROGRAM_NAME} [options] username"
-
-  optp.on('-h', '-?', '--help', 'Option help') {
-    puts optp
-    exit
-  }
-
-  optp.on('-m', '--mutual', 'Show mutual friends') {
-    options[:mutual_friends] = true
-  }
-
-  optp.on('-r', '--only-friends', 'Show only-friends') {
-    options[:only_friends] = true
-  }
-
-  optp.on('-o', '--only-followers', 'Show only-followers') {
-    options[:only_followers] = true
-  }
-
-  optp.separator '  If none of -m/-r/-o are specified, display all 3 categories.'
-
-  optp.parse!
-
-  if ARGV.empty?
-    warn 'Error: username argument missing!'
-    warn optp
-    exit 1
-  end
-
-  options[:username] = ARGV.first
-
-  options
-end
-
 options = parse_cmdline
-report_ff(options[:username], options)
+
+config = Config.new
+config.load_config(options.config_file)
+
+auth = GithubAuth.new(config: config, force_auth: options.force_auth)
+access_token = auth.access_token
+
+client = Octokit::Client.new(auto_paginate: true, access_token: access_token)
+
+report_ff(client, options)
 
 __END__
