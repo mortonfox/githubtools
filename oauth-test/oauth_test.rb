@@ -11,7 +11,7 @@ require 'webrick'
 payload = {
   client_id: 'ea6dfdbf6e585e59fac6',
   scope: 'repo gist',
-  state: 'helloworld'
+  state: "helloworld#{Time.now.to_i}"
 }
 
 # Run a WEBrick server to catch the callback after the user authorizes the
@@ -68,5 +68,6 @@ resp = RestClient.post(
 )
 json = JSON.parse(resp.body)
 puts "Access token = #{json['access_token']}"
+puts resp.body
 
 __END__
