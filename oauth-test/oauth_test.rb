@@ -68,6 +68,7 @@ resp = RestClient.post(
   accept: :json
 )
 json = JSON.parse(resp.body)
+p json
 access_token = json['access_token']
 puts "Access token = #{access_token}"
 
