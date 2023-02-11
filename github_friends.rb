@@ -54,7 +54,6 @@ def parse_cmdline
     options.config_file = fname
   }
 
-
   opts.separator '  If none of -m/-r/-o are specified, display all 3 categories.'
 
   opts.parse!
