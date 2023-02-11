@@ -4,6 +4,7 @@
 
 require 'json'
 require 'launchy'
+require 'octokit'
 require 'rest-client'
 require 'uri'
 require 'webrick'
@@ -67,7 +68,11 @@ resp = RestClient.post(
   accept: :json
 )
 json = JSON.parse(resp.body)
-puts "Access token = #{json['access_token']}"
-puts resp.body
+access_token = json['access_token']
+puts "Access token = #{access_token}"
+
+client = Octokit::Client.new(access_token: access_token)
+user = client.user
+puts "Username = #{user.login}"
 
 __END__
