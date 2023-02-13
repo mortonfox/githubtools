@@ -51,14 +51,15 @@ def parse_cmdline
 end
 
 def search_repos(client, search_str)
-  repos = client.repos(nil)
-  repos
+  repos =
+    client
+    .repos(nil)
     .select { |repo|
       # Consider only forks.
       # Ignore repos with #keep in the description.
       repo[:fork] && !repo[:description].to_s.downcase.include?('#keep') && repo[:name].downcase.include?(search_str.downcase)
     }
-    .map { |repo| repo[:full_name] }
+  repos.map { |repo| repo[:full_name] }
 end
 
 def delete_repos(client, reponames)

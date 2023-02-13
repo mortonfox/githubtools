@@ -29,7 +29,7 @@ class GithubAuth
     tok = load_token unless @force_auth
 
     tok = do_auth if tok.nil?
-    
+
     tok
   end
 
@@ -82,7 +82,7 @@ class GithubAuth
       state: state
     }
 
-    url = 'https://github.com/login/oauth/authorize?' + URI.encode_www_form(payload)
+    url = "https://github.com/login/oauth/authorize?#{URI.encode_www_form(payload)}"
     Launchy.open(url)
 
     got_auth_code = false

@@ -53,7 +53,7 @@ server.mount_proc('/favicon.ico') { raise WEBrick::HTTPStatus::NotFound }
 
 Thread.new { server.start }
 
-url = 'https://github.com/login/oauth/authorize?' + URI.encode_www_form(payload)
+url = "https://github.com/login/oauth/authorize?#{URI.encode_www_form(payload)}"
 Launchy.open(url)
 
 got_auth_code = false

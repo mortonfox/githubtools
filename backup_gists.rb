@@ -58,8 +58,8 @@ def backup_gists(client, username)
     return
   end
 
-  Dir.mkdir GISTS_FOLDER unless Dir.exist? GISTS_FOLDER
-  Dir.chdir GISTS_FOLDER
+  FileUtils.mkdir_p(GISTS_FOLDER)
+  Dir.chdir(GISTS_FOLDER)
 
   gists.each_with_index { |gist, git_indx|
     puts "#{git_indx + 1}: Cloning gist #{gist[:id]} - #{(gist[:files].first || []).first}..."

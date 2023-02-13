@@ -33,10 +33,10 @@ interval = json['interval']
 
 expire_time = Time.now + expires_in
 
-puts <<-EOM
-Please enter the code #{user_code} at #{verification_url}
-This code will expire in #{expires_in} seconds.
-EOM
+puts <<~MESG
+  Please enter the code #{user_code} at #{verification_url}
+  This code will expire in #{expires_in} seconds.
+MESG
 
 payload = {
   client_id: CLIENT_ID,
@@ -46,7 +46,7 @@ payload = {
 
 access_token = nil
 
-while Time.now < expire_time do
+while Time.now < expire_time
   sleep(interval)
 
   resp = RestClient.post(

@@ -62,8 +62,8 @@ def backup_repos(client, username)
     return
   end
 
-  Dir.mkdir REPOS_FOLDER unless Dir.exist? REPOS_FOLDER
-  Dir.chdir REPOS_FOLDER
+  FileUtils.mkdir_p(REPOS_FOLDER)
+  Dir.chdir(REPOS_FOLDER)
 
   repos.each_with_index { |repo, repo_indx|
     puts "#{repo_indx + 1}: Cloning repo #{repo[:full_name]}..."
@@ -74,7 +74,7 @@ def backup_repos(client, username)
 
     next unless repo[:has_wiki]
 
-    wiki_name = repo[:name] + '.wiki'
+    wiki_name = "#{repo[:name]}.wiki"
     wiki_clone_url = git_url.gsub(/\.git$/, '.wiki\&')
 
     begin
@@ -86,7 +86,7 @@ def backup_repos(client, username)
 end
 
 # Find a subfolder name that does not already exist.
-def find_new_subfolder subfolder
+def find_new_subfolder(subfolder)
   if Dir.exist?(subfolder)
     i = 1
     i += 1 while Dir.exist? "#{subfolder}-#{i}"
@@ -95,7 +95,7 @@ def find_new_subfolder subfolder
   subfolder
 end
 
-def clone_and_bundle clone_url, subfolder
+def clone_and_bundle(clone_url, subfolder)
   got_warning = false
 
   Git.clone clone_url, subfolder

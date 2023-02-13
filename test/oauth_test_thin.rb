@@ -33,24 +33,24 @@ server = Thin::Server.new('0.0.0.0', 3501) do
       code_param = query['code']
 
       if ret_state != state
-        [400, {'content-type' => 'text/plain'}, ['Returned state does not match our state']]
+        [400, { 'content-type' => 'text/plain' }, ['Returned state does not match our state']]
       elsif code_param
         auth_mutex.synchronize { auth_code ||= code_param }
-        [200, {'content-type' => 'text/plain'}, ['Okay']]
+        [200, { 'content-type' => 'text/plain' }, ['Okay']]
       else
-        [400, {'content-type' => 'text/plain'}, ['Missing code parameter']]
+        [400, { 'content-type' => 'text/plain' }, ['Missing code parameter']]
       end
     }
   end
 
   map('/favicon.ico') do
-    run lambda { |_env| [404, {'content-type' => 'text/plain'}, ['Not found']] }
+    run -> { [404, { 'content-type' => 'text/plain' }, ['Not found']] }
   end
 end
 
 Thread.new { server.start }
 
-url = 'https://github.com/login/oauth/authorize?' + Rack::Utils.build_query(payload)
+url = "https://github.com/login/oauth/authorize?#{Rack::Utils.build_query(payload)}"
 Launchy.open(url)
 
 got_auth_code = false
