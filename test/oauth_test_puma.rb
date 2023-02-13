@@ -2,6 +2,8 @@
 
 # frozen_string_literal: true
 
+# OAuth web application flow test with Puma server
+
 require 'json'
 require 'launchy'
 require 'octokit'
