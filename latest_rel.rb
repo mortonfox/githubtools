@@ -102,7 +102,7 @@ ARGV.each { |arg|
   report_latest(client, arg) { |repo, rel|
     if options.debug
       puts "#{repo}:"
-      pp rel
+      puts rel.inspect
       puts
     elsif options.long
       puts "#{repo}: #{rel.name} at #{rel.published_at.localtime.strftime('%Y-%m-%d %H:%M')}"

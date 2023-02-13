@@ -23,7 +23,7 @@ resp = RestClient.post(
 )
 
 json = JSON.parse(resp.body)
-p json
+# p json
 
 device_code = json['device_code']
 user_code = json['user_code']
@@ -57,7 +57,7 @@ while Time.now < expire_time
   )
 
   json = JSON.parse(resp.body)
-  p json
+  # p json
   if json.key?('access_token')
     access_token = json['access_token']
     break
