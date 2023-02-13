@@ -37,6 +37,14 @@ def parse_cmdline
     options.debug = true
   }
 
+  opts.on('--auth', 'Ignore saved access token and force reauthentication') {
+    options.force_auth = true
+  }
+
+  opts.on('--config-file=FNAME', "Config file name. Default is #{DEFAULT_CONFIG_FILE}") { |fname|
+    options.config_file = fname
+  }
+
   opts.parse!
 
   if ARGV.empty?
@@ -49,7 +57,7 @@ def parse_cmdline
   # List of repos will be in ARGV
 end
 
-def report_latest client, repo
+def report_latest(client, repo)
   unless client.repository?(repo)
     warn "Repo #{repo} does not exist"
     return
