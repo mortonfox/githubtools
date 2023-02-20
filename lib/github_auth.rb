@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
+require 'faraday'
+require 'faraday/retry'
 require 'json'
 require 'launchy'
-require 'rest-client'
 require 'securerandom'
 require 'uri'
 require 'webrick'
@@ -101,20 +102,25 @@ class GithubAuth
       code: auth_code
     }
 
-    resp = RestClient.post(
+    conn = Faraday.new { |f|
+      f.request :retry
+      f.request :json
+      f.response :json
+      f.response :raise_error
+      f.headers['Accept'] = 'application/json'
+    }
+
+    resp = conn.post(
       'https://github.com/login/oauth/access_token',
-      payload.to_json,
-      content_type: :json,
-      accept: :json
+      payload
     )
 
     body = resp.body
 
     # Save token to token file.
-    File.write(File.expand_path(@token_file), body)
+    File.write(File.expand_path(@token_file), body.to_json)
 
-    json = JSON.parse(body)
-    json['access_token']
+    body['access_token']
   end
 end
 

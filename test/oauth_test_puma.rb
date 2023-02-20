@@ -4,12 +4,12 @@
 
 # OAuth web application flow test with Puma server
 
-require 'json'
+require 'faraday'
+require 'faraday/retry'
 require 'launchy'
 require 'octokit'
 require 'puma'
 require 'rack'
-require 'rest-client'
 require 'securerandom'
 
 CLIENT_ID = 'ea6dfdbf6e585e59fac6'
@@ -75,15 +75,20 @@ payload = {
   code: auth_code
 }
 
-resp = RestClient.post(
+conn = Faraday.new { |f|
+  f.request :retry
+  f.request :json
+  f.response :json
+  f.response :raise_error
+  f.headers['Accept'] = 'application/json'
+}
+
+resp = conn.post(
   'https://github.com/login/oauth/access_token',
-  payload.to_json,
-  content_type: :json,
-  accept: :json
+  payload
 )
-json = JSON.parse(resp.body)
-# p json
-access_token = json['access_token']
+token = resp.body
+access_token = token['access_token']
 puts "Access token = #{access_token}"
 
 client = Octokit::Client.new(access_token: access_token)

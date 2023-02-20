@@ -4,9 +4,9 @@
 
 # OAuth device flow test
 
-require 'json'
+require 'faraday'
+require 'faraday/retry'
 require 'octokit'
-require 'rest-client'
 
 CLIENT_ID = 'ea6dfdbf6e585e59fac6'
 
@@ -15,21 +15,26 @@ payload = {
   scope: 'repo gist delete_repo'
 }
 
-resp = RestClient.post(
+conn = Faraday.new { |f|
+  f.request :retry
+  f.request :json
+  f.response :json
+  f.response :raise_error
+  f.headers['Accept'] = 'application/json'
+}
+
+resp = conn.post(
   'https://github.com/login/device/code',
-  payload.to_json,
-  content_type: :json,
-  accept: :json
+  payload
 )
 
-json = JSON.parse(resp.body)
-# p json
+token = resp.body
 
-device_code = json['device_code']
-user_code = json['user_code']
-verification_url = json['verification_uri']
-expires_in = json['expires_in']
-interval = json['interval']
+device_code = token['device_code']
+user_code = token['user_code']
+verification_url = token['verification_uri']
+expires_in = token['expires_in']
+interval = token['interval']
 
 expire_time = Time.now + expires_in
 
@@ -49,17 +54,14 @@ access_token = nil
 while Time.now < expire_time
   sleep(interval)
 
-  resp = RestClient.post(
+  resp = conn.post(
     'https://github.com/login/oauth/access_token',
-    payload.to_json,
-    content_type: :json,
-    accept: :json
+    payload
   )
 
-  json = JSON.parse(resp.body)
-  # p json
-  if json.key?('access_token')
-    access_token = json['access_token']
+  token = resp.body
+  if token.key?('access_token')
+    access_token = token['access_token']
     break
   end
 end
