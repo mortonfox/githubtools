@@ -24,6 +24,7 @@ payload = {
 
 auth_mutex = Mutex.new
 auth_code = nil
+auth_error = nil
 
 server = Thin::Server.new('0.0.0.0', 3501) do
   map('/callback') do
@@ -33,12 +34,16 @@ server = Thin::Server.new('0.0.0.0', 3501) do
       code_param = query['code']
 
       if ret_state != state
-        [400, { 'content-type' => 'text/plain' }, ['Returned state does not match our state']]
+        error_msg = 'Returned state does not match our state'
+        auth_mutex.synchronize { auth_error ||= error_msg }
+        [400, { 'content-type' => 'text/plain' }, [error_msg]]
       elsif code_param
         auth_mutex.synchronize { auth_code ||= code_param }
         [200, { 'content-type' => 'text/plain' }, ['Okay']]
       else
-        [400, { 'content-type' => 'text/plain' }, ['Missing code parameter']]
+        error_msg = 'Missing code parameter'
+        auth_mutex.synchronize { auth_error ||= error_msg }
+        [400, { 'content-type' => 'text/plain' }, [error_msg]]
       end
     }
   end
@@ -53,15 +58,15 @@ Thread.new { server.start }
 url = "https://github.com/login/oauth/authorize?#{Rack::Utils.build_query(payload)}"
 Launchy.open(url)
 
-got_auth_code = false
-until got_auth_code
+got_auth_result = false
+until got_auth_result
   sleep(1)
-  auth_mutex.synchronize {
-    got_auth_code = true if auth_code
-  }
+  auth_mutex.synchronize { got_auth_result = true if auth_code || auth_error }
 end
 
 server.stop
+
+raise "Received the following callback error: #{auth_error}" if auth_error
 
 puts "Code = #{auth_code}"
 

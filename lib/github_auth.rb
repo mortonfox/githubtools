@@ -52,24 +52,26 @@ class GithubAuth
 
     auth_mutex = Mutex.new
     auth_code = nil
+    auth_error = nil
 
     server.mount_proc('/callback') { |req, res|
       code_param = req.query['code']
       ret_state = req.query['state']
 
+      res['content-type'] = 'text/plain'
       if ret_state != state
+        res.status = 400
         res.body = 'Returned state does not match our state'
-        raise WEBrick::HTTPStatus::BadRequest
-      end
-
-      unless code_param
+        auth_mutex.synchronize { auth_error ||= res.body }
+      elsif !code_param
+        res.status = 400
         res.body = 'Missing code parameter'
-        raise WEBrick::HTTPStatus::BadRequest
+        auth_mutex.synchronize { auth_error ||= res.body }
+      else
+        auth_mutex.synchronize { auth_code ||= code_param }
+        res.body = 'Okay'
+        raise WEBrick::HTTPStatus::OK
       end
-
-      auth_mutex.synchronize { auth_code ||= code_param }
-      res.body = 'Okay'
-      raise WEBrick::HTTPStatus::OK
     }
 
     # Suppress the favicon.ico error message.
@@ -86,15 +88,15 @@ class GithubAuth
     url = "https://github.com/login/oauth/authorize?#{URI.encode_www_form(payload)}"
     Launchy.open(url)
 
-    got_auth_code = false
-    until got_auth_code
+    got_auth_result = false
+    until got_auth_result
       sleep(1)
-      auth_mutex.synchronize {
-        got_auth_code = true if auth_code
-      }
+      auth_mutex.synchronize { got_auth_result = true if auth_code || auth_error }
     end
 
     server.shutdown
+
+    raise "Received the following callback error: #{auth_error}" if auth_error
 
     payload = {
       client_id: @client_id,
