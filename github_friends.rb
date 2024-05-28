@@ -80,8 +80,8 @@ def show_list(list)
     return
   end
 
-  list.sort_by(&:downcase).each_with_index { |name, i|
-    puts "#{i + 1}: #{name}"
+  list.sort_by { |user| user.login.downcase }.each_with_index { |user, i|
+    puts "#{i + 1}: #{user.login} ( #{user.html_url} )"
   }
 end
 
@@ -89,8 +89,8 @@ def report_ff(client, options)
   username = options.username
 
   begin
-    following = Set.new(client.following(username).map(&:login))
-    followers = Set.new(client.followers(username).map(&:login))
+    following = Set.new(client.following(username))
+    followers = Set.new(client.followers(username))
   rescue Octokit::NotFound
     warn "User #{username} not found!"
     exit 1
