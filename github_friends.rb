@@ -74,23 +74,33 @@ def parse_cmdline
   options
 end
 
-def show_list(list)
+def show_list(list, userdata)
   if list.empty?
     puts 'n/a'
     return
   end
 
-  list.sort_by { |user| user.login.downcase }.each_with_index { |user, i|
-    puts "#{i + 1}: #{user.login} ( #{user.html_url} )"
+  list.sort_by(&:downcase).each_with_index { |username, i|
+    puts "#{i + 1}: #{username} ( #{userdata[username].html_url} )"
   }
 end
 
 def report_ff(client, options)
   username = options.username
 
+  userdata = {}
+  following = Set.new
+  followers = Set.new
+
   begin
-    following = Set.new(client.following(username))
-    followers = Set.new(client.followers(username))
+    client.following(username).each { |user|
+      userdata[user.login] = user
+      following << user.login
+    }
+    client.followers(username).each { |user|
+      userdata[user.login] = user
+      followers << user.login
+    }
   rescue Octokit::NotFound
     warn "User #{username} not found!"
     exit 1
@@ -98,19 +108,19 @@ def report_ff(client, options)
 
   if options.mutual_friends
     puts 'Mutual following:'
-    show_list following & followers
+    show_list(following & followers, userdata)
     puts
   end
 
   if options.only_friends
     puts 'Only following:'
-    show_list following - followers
+    show_list(following - followers, userdata)
     puts
   end
 
   if options.only_followers
     puts 'Only followers:'
-    show_list followers - following
+    show_list(followers - following, userdata)
     puts
   end
 end
