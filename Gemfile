@@ -7,7 +7,6 @@ ruby '>= 3.4.0'
 
 gem 'faraday'
 gem 'faraday-retry'
-gem 'finer_struct'
 gem 'git'
 gem 'hocon'
 gem 'json'

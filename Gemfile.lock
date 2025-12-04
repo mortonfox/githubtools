@@ -31,7 +31,6 @@ GEM
       net-http (~> 0.5)
     faraday-retry (2.3.2)
       faraday (~> 2.0)
-    finer_struct (0.1.0)
     git (4.0.6)
       activesupport (>= 5.0)
       addressable (~> 2.8)
@@ -72,7 +71,6 @@ PLATFORMS
 DEPENDENCIES
   faraday
   faraday-retry
-  finer_struct
   git
   hocon
   json

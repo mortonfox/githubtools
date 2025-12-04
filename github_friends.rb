@@ -7,7 +7,6 @@
 # - only followers
 # - only following
 
-require 'finer_struct'
 require 'octokit'
 require 'optparse'
 require_relative 'lib/config'
@@ -15,15 +14,19 @@ require_relative 'lib/github_auth'
 
 DEFAULT_CONFIG_FILE = File.expand_path('~/.githubtools.conf')
 
+DEFAULT_OPTIONS = {
+  config_file: DEFAULT_CONFIG_FILE,
+  force_auth: false,
+  mutual_friends: false,
+  only_friends: false,
+  only_followers: false,
+  username: nil
+}.freeze
+
+Options = Struct.new(*DEFAULT_OPTIONS.keys)
+
 def parse_cmdline
-  options = FinerStruct::Mutable.new(
-    config_file: DEFAULT_CONFIG_FILE,
-    force_auth: false,
-    mutual_friends: false,
-    only_friends: false,
-    only_followers: false,
-    username: nil
-  )
+  options = Options.new(**DEFAULT_OPTIONS)
 
   opts = OptionParser.new
 
