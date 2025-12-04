@@ -4,7 +4,6 @@
 
 # Given a username, downloads all of the user's gists.
 
-require 'finer_struct'
 require 'git'
 require 'octokit'
 require 'optparse'
@@ -14,12 +13,16 @@ require_relative 'lib/github_auth'
 GISTS_FOLDER = './gists'
 DEFAULT_CONFIG_FILE = File.expand_path('~/.githubtools.conf')
 
+DEFAULT_OPTIONS = {
+  config_file: DEFAULT_CONFIG_FILE,
+  force_auth: false,
+  username: nil
+}.freeze
+
+Options = Struct.new(*DEFAULT_OPTIONS.keys)
+
 def parse_cmdline
-  options = FinerStruct::Mutable.new(
-    config_file: DEFAULT_CONFIG_FILE,
-    force_auth: false,
-    username: nil
-  )
+  options = Options.new(**DEFAULT_OPTIONS)
 
   opts = OptionParser.new
 
